@@ -1,9 +1,8 @@
-// Import necessary components and icons
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { FaPlay, FaPause, FaRedo, FaForward } from 'react-icons/fa';
+import DarkModeToggleComponent from '../components/Darkmode.jsx'; 
 
-// Define the keyframes for the progress animation
 const progressAnimation = keyframes`
   from {
     transform: rotate(0deg);
@@ -31,7 +30,7 @@ const CircleBackground = styled.div`
   position: absolute;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: 100%;
   background-color: #e0e0e0;
   border: 8px solid #A020F0;
   box-sizing: border-box;
@@ -56,17 +55,17 @@ const Timer = styled.div`
   align-items: center;
   justify-content: center;
   position: absolute;
-  top: 60%;
+  top: 55%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 3rem; /* Adjust the font size for the time */
-  text-transform: uppercase; /* Convert all letters to uppercase */
+  font-size: 3rem; 
+  text-transform: uppercase; 
   color: ${({ isFocusTimer }) => (isFocusTimer ? '#000000' : '#000000')};
 `;
 
 const AdditionalText = styled.span`
-  font-size: 0.8rem;
-  margin-top: 20px; 
+  font-size: 1.3rem;
+  margin-top: 10px; 
   text-align: center; 
   font-weight: bold;
 `;
@@ -75,6 +74,7 @@ const ButtonContainer = styled.div`
   display: flex;
   justify-content: space-between;
   width: 120px;
+  margin-top: 15px;
 `;
 
 const PomodoroTimer = () => {
@@ -91,15 +91,17 @@ const PomodoroTimer = () => {
           if (prevTime === 0) {
             clearInterval(interval);
             setIsRunning(false);
-
             if (isFocusTimer) {
-              setTime(300); 
+              setTime(300);
+              document.title = "Break Timer";
             } else {
-              setTime(1500); 
+              setTime(1500);
+              document.title = "Focus Timer"; 
             }
-            setIsFocusTimer(prevIsFocusTimer => !prevIsFocusTimer); 
+            setIsFocusTimer(prevIsFocusTimer => !prevIsFocusTimer);
             return prevTime;
           } else {
+            document.title = `${Math.floor(prevTime / 60).toString().padStart(2, '0')}:${(prevTime % 60).toString().padStart(2, '0')} - ${isFocusTimer ? 'Focus' : 'Break'}`;
             return prevTime - 1;
           }
         });
@@ -108,10 +110,10 @@ const PomodoroTimer = () => {
     } else {
       clearInterval(interval);
     }
-
+  
     return () => clearInterval(interval);
   }, [isRunning, isFocusTimer, time]);
-
+  
   const startTimer = () => {
     setIsRunning(true);
   };
@@ -134,7 +136,7 @@ const PomodoroTimer = () => {
     } else {
       setTime(1500); 
     }
-    setIsFocusTimer(prevIsFocusTimer => !prevIsFocusTimer); // Toggle focus/break timer
+    setIsFocusTimer(prevIsFocusTimer => !prevIsFocusTimer); 
   };
 
   const formatTime = () => {
@@ -146,6 +148,7 @@ const PomodoroTimer = () => {
 
   return (
     <PomodoroContainer>
+      <DarkModeToggleComponent /> 
       <CircleContainer>
         <CircleBackground />
         <CircleProgress isRunning={isRunning} progress={progress} />

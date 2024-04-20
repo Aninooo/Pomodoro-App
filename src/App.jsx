@@ -1,8 +1,6 @@
 
-import './index.css'
 import React from 'react';
-import PomodoroTimer from './Pomodoro';
-
+import PomodoroTimer from './components/Pomodoro.jsx';
 
 const App = () => {
   return (
