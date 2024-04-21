@@ -125,8 +125,8 @@ const UploadIcon = styled(FaUpload)`
 
 const NotificationContainer = styled.div`
   position: absolute;
-  bottom: -160px;
-  left: -250px;
+  bottom: 250px;
+  left: 30px;
 `;
 
 const NotificationSoundSelect = styled.select`

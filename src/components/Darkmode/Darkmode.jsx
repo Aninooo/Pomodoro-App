@@ -42,7 +42,7 @@ const DarkModeToggleComponent = () => {
       <GlobalStyle darkMode={darkMode} />
       <DarkModeContainer>
         <DarkModeToggle darkMode={darkMode} onClick={toggleDarkMode}>
-          {darkMode ? <FaMoon size={24} /> : <FaSun size={24} />} {/* Adjusted icon size */}
+          {darkMode ? <FaMoon size={24} /> : <FaSun size={24} />} 
           <ModeText>{darkMode ? 'Light Mode' : 'Dark Mode'}</ModeText>
         </DarkModeToggle>
       </DarkModeContainer>
