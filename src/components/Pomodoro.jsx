@@ -58,7 +58,7 @@ const CircleBackground = styled.div`
   border-radius: 100%;
   border: 3px solid #A020F0;
   box-sizing: border-box;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.50);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.40);
   cursor: pointer;
 `;
 
