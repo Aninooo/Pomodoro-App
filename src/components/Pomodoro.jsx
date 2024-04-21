@@ -135,7 +135,7 @@ position: absolute;
 `;
 
 const PomodoroTimer = () => {
-  const [time, setTime] = useState(3600);
+  const [time, setTime] = useState(2);
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isFocusTimer, setIsFocusTimer] = useState(true);
