@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes, ThemeProvider } from 'styled-components';
-import { FaPlay, FaPause, FaRedo, FaForward, FaUpload } from 'react-icons/fa';
+import { FaPlay, FaPause, FaRedo, FaForward, FaUpload, FaCog } from 'react-icons/fa';
 import DarkModeToggleComponent from '../components/Darkmode/Darkmode.jsx';
 import { getNotificationSounds } from '../notifications/notificationSounds.jsx';
 
@@ -123,19 +123,53 @@ const UploadIcon = styled(FaUpload)`
   cursor: pointer;
 `;
 
-const NotificationContainer = styled.div`
+const SettingsIcon = styled(FaCog)`
   position: absolute;
-  bottom: 250px;
-  left: 30px;
+  bottom: -250px; 
+  right: -600px; 
+  font-size: 24px;
+  cursor: pointer;
 `;
 
-const NotificationSoundSelect = styled.select`
-position: absolute;
-  margin-top: -10px;
+const Modal = styled.div`
+  display: ${({ open }) => (open ? 'block' : 'none')};
+  position: absolute;
+  bottom: 60px; 
+  right: 20px;
+  background-color: white;
+  border-radius: 5px;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+`;
+
+const SoundSelect = styled.select`
+  margin-top: 10px;
+`;
+
+const TimeSelectorContainer = styled.div`
+  height: 200px;
+  overflow-y: auto;
+`;
+
+const TimeOption = styled.div`
+  padding: 10px;
+  cursor: pointer;
+  &:hover {
+    background-color: #f0f0f0;
+  }
+`;
+
+const TimeButtonContainer = styled.div`
+  display: flex;
+  justify-content: space-around;
+  margin-top: 10px;
 `;
 
 const PomodoroTimer = () => {
   const [time, setTime] = useState(3600);
+  const [breakTime, setBreakTime] = useState(300); // default break time of 5 minutes
+const [focusTime, setFocusTime] = useState(3600); // default focus time of 1 hour
+
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isFocusTimer, setIsFocusTimer] = useState(true);
@@ -153,6 +187,8 @@ const PomodoroTimer = () => {
   });
   const [notificationSounds, setNotificationSounds] = useState([]);
   const [selectedNotificationSound, setSelectedNotificationSound] = useState(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [timeSelectionOpen, setTimeSelectionOpen] = useState(false);
 
   useEffect(() => {
     const storedBackgroundImages = JSON.parse(localStorage.getItem('backgroundImages'));
@@ -181,7 +217,6 @@ const PomodoroTimer = () => {
       audio.play();
     }
   };
-
   useEffect(() => {
     let interval;
     if (isRunning) {
@@ -191,13 +226,14 @@ const PomodoroTimer = () => {
             clearInterval(interval);
             setIsRunning(false);
             if (isFocusTimer) {
-              setTime(300);
+              setIsFocusTimer(false); 
+              setTime(breakTime); 
               document.title = 'Break Timer';
             } else {
-              setTime(3600);
+              setIsFocusTimer(true); 
+              setTime(focusTime); 
               document.title = 'Focus Timer';
             }
-            setIsFocusTimer(prevIsFocusTimer => !prevIsFocusTimer);
             playNotificationSound();
             return prevTime;
           } else {
@@ -216,9 +252,10 @@ const PomodoroTimer = () => {
     } else {
       clearInterval(interval);
     }
-
+  
     return () => clearInterval(interval);
-  }, [isRunning, isFocusTimer, time, selectedNotificationSound]);
+  }, [isRunning, isFocusTimer, time, playNotificationSound, breakTime, focusTime]);
+  
 
   const startTimer = () => {
     setIsRunning(true);
@@ -276,17 +313,33 @@ const PomodoroTimer = () => {
       .padStart(2, '0');
     const seconds = (time % 60).toString().padStart(2, '0');
     const timerType = isFocusTimer ? 'Focus' : 'Break';
-    return { time: `${minutes}:${seconds}`, additionalText: `${timerType}` };
+    return { time: `${minutes}:${seconds}`, additionalText: timerType };
   };
 
   const isDarkMode = false;
+
+  const selectTime = (selectedTime) => {
+    setTime(selectedTime);
+    setIsRunning(false);
+    setTimeSelectionOpen(false);
+  };
+
+  const selectTimerType = (isFocus) => {
+    setIsFocusTimer(isFocus);
+    setTimeSelectionOpen(true);
+  };
+
+const setTimeFromSelection = () => {
+  setTimeSelectionOpen(false);
+  setSettingsOpen(false); 
+};
 
   return (
     <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
       <PomodoroContainer>
         <DarkModeToggleComponent />
         <CircleContainer>
-          <CircleBackground />
+          <CircleBackground onClick={() => setTimeSelectionOpen(true)} />
           <CircleProgress isRunning={isRunning} progress={progress} />
           <Timer isFocusTimer={isFocusTimer}>
             {formatTime().time}
@@ -306,17 +359,40 @@ const PomodoroTimer = () => {
               </FileInputContainer>
             )}
           </BottomSquare>
-          <NotificationContainer>
+          <SettingsIcon onClick={() => setSettingsOpen(!settingsOpen)} />
+          <Modal open={settingsOpen}>
             <h3>Notification Sound:</h3>
-            <NotificationSoundSelect onChange={(e) => setSelectedNotificationSound(e.target.value)}>
+            <SoundSelect onChange={(e) => setSelectedNotificationSound(e.target.value)}>
               <option value="">None</option>
               {notificationSounds.map(sound => (
                 <option key={sound.url} value={sound.url}>
                   {sound.name}
                 </option>
               ))}
-            </NotificationSoundSelect>
-          </NotificationContainer>
+            </SoundSelect>
+            <h3>Time Selection:</h3>
+            {timeSelectionOpen && (
+              <TimeSelectorContainer>
+                <TimeOption onClick={() => selectTime(2)}>2 secs</TimeOption>
+                <TimeOption onClick={() => selectTime(300)}>5 mins</TimeOption>
+                <TimeOption onClick={() => selectTime(600)}>10 mins</TimeOption>
+                <TimeOption onClick={() => selectTime(900)}>15 mins</TimeOption>
+                <TimeOption onClick={() => selectTime(1200)}>20 mins</TimeOption>
+                <TimeOption onClick={() => selectTime(1500)}>25 mins</TimeOption>
+                <TimeOption onClick={() => selectTime(1800)}>30 mins</TimeOption>
+                <TimeOption onClick={() => selectTime(2400)}>40 mins</TimeOption>
+                <TimeOption onClick={() => selectTime(3000)}>50 mins</TimeOption>
+                <TimeOption onClick={() => selectTime(3600)}>1 hr</TimeOption>
+                <TimeOption onClick={() => selectTime(5100)}>1 hr 25 mins</TimeOption>
+                <TimeOption onClick={() => selectTime(7200)}>2 hrs</TimeOption>
+              </TimeSelectorContainer>
+            )}
+            <TimeButtonContainer>
+              <button onClick={() => selectTimerType(true)}>Focus</button>
+              <button onClick={() => selectTimerType(false)}>Break</button>
+              <button onClick={setTimeFromSelection}>OK</button>
+            </TimeButtonContainer>
+          </Modal>
         </CircleContainer>
         <ButtonContainer>
           <FaRedo
