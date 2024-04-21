@@ -1,15 +1,12 @@
-// eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes, ThemeProvider } from 'styled-components';
 import { FaPlay, FaPause, FaRedo, FaForward, FaUpload } from 'react-icons/fa';
 import DarkModeToggleComponent from '../components/Darkmode/Darkmode.jsx';
+import { getNotificationSounds } from '../notifications/notificationSounds.jsx';
 
-const darkTheme = {
-};
+const darkTheme = {};
 
-const lightTheme = {
-
-};
+const lightTheme = {};
 
 const progressAnimation = keyframes`
   from {
@@ -26,6 +23,7 @@ const PomodoroContainer = styled.div`
   align-items: center;
   justify-content: center;
   height: 100vh;
+  position: relative;
 `;
 
 const CircleContainer = styled.div`
@@ -56,7 +54,7 @@ const CircleBackground = styled.div`
   width: 100%;
   height: 100%;
   border-radius: 100%;
-  border: 3px solid #A020F0;
+  border: 3px solid #a020f0;
   box-sizing: border-box;
   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.40);
   cursor: pointer;
@@ -67,7 +65,7 @@ const CircleProgress = styled.div`
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 3px solid #A020F0;
+  border: 3px solid #a020f0;
   border-top: 3px solid transparent;
   animation: ${progressAnimation} 1s linear infinite;
   animation-play-state: ${({ isRunning }) => (isRunning ? 'running' : 'paused')};
@@ -84,10 +82,12 @@ const Timer = styled.div`
   position: absolute;
   top: 55%;
   left: 50%;
-  transform: translate(-50%, -50%) translateY(${({ isFocusTimer }) => (isFocusTimer ? '-5px' : '5px')});
+  transform: translate(-50%, -50%)
+    translateY(${({ isFocusTimer }) => (isFocusTimer ? '-5px' : '5px')});
   font-size: 3rem;
   text-transform: uppercase;
-  color: ${({ isFocusTimer, theme }) => (isFocusTimer ? theme.textColor : theme.textColor)};
+  color: ${({ isFocusTimer, theme }) =>
+    isFocusTimer ? theme.textColor : theme.textColor};
   font-family: 'Hanalei Fill', cursive;
   transition: transform 0.3s ease;
 `;
@@ -97,7 +97,7 @@ const AdditionalText = styled.span`
   margin-top: 10px;
   text-align: center;
   font-weight: bold;
-  color: ${({ theme }) => theme.textColor}; 
+  color: ${({ theme }) => theme.textColor};
   transition: transform 0.3s ease;
 `;
 
@@ -123,6 +123,17 @@ const UploadIcon = styled(FaUpload)`
   cursor: pointer;
 `;
 
+const NotificationContainer = styled.div`
+  position: absolute;
+  bottom: -160px;
+  left: -250px;
+`;
+
+const NotificationSoundSelect = styled.select`
+position: absolute;
+  margin-top: -10px;
+`;
+
 const PomodoroTimer = () => {
   const [time, setTime] = useState(3600);
   const [isRunning, setIsRunning] = useState(false);
@@ -140,12 +151,38 @@ const PomodoroTimer = () => {
     top: false,
     bottom: false,
   });
+  const [notificationSounds, setNotificationSounds] = useState([]);
+  const [selectedNotificationSound, setSelectedNotificationSound] = useState(null);
 
   useEffect(() => {
     const storedBackgroundImages = JSON.parse(localStorage.getItem('backgroundImages'));
     if (storedBackgroundImages) {
       setBackgroundImages(storedBackgroundImages);
     }
+    
+    const sounds = getNotificationSounds();
+    setNotificationSounds(sounds);
+  }, []);
+
+  useEffect(() => {
+    const storedSelectedNotificationSound = localStorage.getItem('selectedNotificationSound');
+    if (storedSelectedNotificationSound) {
+      setSelectedNotificationSound(storedSelectedNotificationSound);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('selectedNotificationSound', selectedNotificationSound);
+  }, [selectedNotificationSound]);
+
+  const playNotificationSound = () => {
+    if (selectedNotificationSound) {
+      const audio = new Audio(selectedNotificationSound);
+      audio.play();
+    }
+  };
+
+  useEffect(() => {
     let interval;
     if (isRunning) {
       interval = setInterval(() => {
@@ -161,24 +198,27 @@ const PomodoroTimer = () => {
               document.title = 'Focus Timer';
             }
             setIsFocusTimer(prevIsFocusTimer => !prevIsFocusTimer);
+            playNotificationSound();
             return prevTime;
           } else {
             document.title = `${Math.floor(prevTime / 60)
               .toString()
-              .padStart(2, '0')}:${(prevTime % 60).toString().padStart(2, '0')} - ${
-              isFocusTimer ? 'Focus' : 'Break'
-            }`;
+              .padStart(2, '0')}:${(prevTime % 60)
+              .toString()
+              .padStart(2, '0')} - ${isFocusTimer ? 'Focus' : 'Break'}`;
             return prevTime - 1;
           }
         });
-        setProgress(prevProgress => (prevProgress === 360 ? 0 : prevProgress + 360 / time));
+        setProgress(prevProgress =>
+          prevProgress === 360 ? 0 : prevProgress + 360 / time
+        );
       }, 1000);
     } else {
       clearInterval(interval);
     }
 
     return () => clearInterval(interval);
-  }, [isRunning, isFocusTimer, time]);
+  }, [isRunning, isFocusTimer, time, selectedNotificationSound]);
 
   const startTimer = () => {
     setIsRunning(true);
@@ -215,10 +255,13 @@ const PomodoroTimer = () => {
         [position]: imageUrl,
       }));
 
-      localStorage.setItem('backgroundImages', JSON.stringify({
-        ...prevBackgroundImages,
-        [position]: imageUrl,
-      }));
+      localStorage.setItem(
+        'backgroundImages',
+        JSON.stringify({
+          ...prevBackgroundImages,
+          [position]: imageUrl,
+        })
+      );
     };
     reader.readAsDataURL(file);
     setUploadedImages(prevUploadedImages => ({
@@ -228,7 +271,9 @@ const PomodoroTimer = () => {
   };
 
   const formatTime = () => {
-    const minutes = Math.floor(time / 60).toString().padStart(2, '0');
+    const minutes = Math.floor(time / 60)
+      .toString()
+      .padStart(2, '0');
     const seconds = (time % 60).toString().padStart(2, '0');
     const timerType = isFocusTimer ? 'Focus' : 'Break';
     return { time: `${minutes}:${seconds}`, additionalText: `${timerType}` };
@@ -252,19 +297,47 @@ const PomodoroTimer = () => {
               <FileInputContainer>
                 <UploadIcon />
                 <FileInputText>Your inspiration</FileInputText>
-                <input type="file" onChange={e => handleImageUpload(e, 'bottom')} accept="image/*" style={{ display: 'none' }} />
+                <input
+                  type="file"
+                  onChange={e => handleImageUpload(e, 'bottom')}
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                />
               </FileInputContainer>
             )}
           </BottomSquare>
+          <NotificationContainer>
+            <h3>Notification Sound:</h3>
+            <NotificationSoundSelect onChange={(e) => setSelectedNotificationSound(e.target.value)}>
+              <option value="">None</option>
+              {notificationSounds.map(sound => (
+                <option key={sound.url} value={sound.url}>
+                  {sound.name}
+                </option>
+              ))}
+            </NotificationSoundSelect>
+          </NotificationContainer>
         </CircleContainer>
         <ButtonContainer>
-          <FaRedo onClick={resetTimer} style={{ fontSize: '24px', cursor: 'pointer' }} />
+          <FaRedo
+            onClick={resetTimer}
+            style={{ fontSize: '24px', cursor: 'pointer' }}
+          />
           {!isRunning ? (
-            <FaPlay onClick={startTimer} style={{ fontSize: '24px', cursor: 'pointer' }} />
+            <FaPlay
+              onClick={startTimer}
+              style={{ fontSize: '24px', cursor: 'pointer' }}
+            />
           ) : (
-            <FaPause onClick={pauseTimer} style={{ fontSize: '24px', cursor: 'pointer' }} />
+            <FaPause
+              onClick={pauseTimer}
+              style={{ fontSize: '24px', cursor: 'pointer' }}
+            />
           )}
-          <FaForward onClick={skipTimer} style={{ fontSize: '24px', cursor: 'pointer' }} />
+          <FaForward
+            onClick={skipTimer}
+            style={{ fontSize: '24px', cursor: 'pointer' }}
+          />
         </ButtonContainer>
       </PomodoroContainer>
     </ThemeProvider>
