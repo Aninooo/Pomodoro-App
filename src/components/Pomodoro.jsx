@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes, ThemeProvider } from 'styled-components';
 import { FaPlay, FaPause, FaRedo, FaForward, FaUpload } from 'react-icons/fa';
@@ -57,7 +58,7 @@ const CircleBackground = styled.div`
   border-radius: 100%;
   border: 3px solid #A020F0;
   box-sizing: border-box;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.70);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.50);
   cursor: pointer;
 `;
 
@@ -72,7 +73,7 @@ const CircleProgress = styled.div`
   animation-play-state: ${({ isRunning }) => (isRunning ? 'running' : 'paused')};
   transform: ${({ progress }) => `rotate(${progress}deg)`};
   box-sizing: border-box;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.40);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.15);
 `;
 
 const Timer = styled.div`
