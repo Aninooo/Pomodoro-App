@@ -5,16 +5,30 @@ import { FaSun, FaMoon } from 'react-icons/fa';
 const GlobalStyle = createGlobalStyle`
   body {
     background-color: ${({ darkMode }) => (darkMode ? '#333' : '#fff')};
-    color: ${({ darkMode }) => (darkMode ? '#fff' : '#000')}; /* Change text color */
+    color: ${({ darkMode }) => (darkMode ? '#fff' : '#000')};
   }
+`;
+
+const DarkModeContainer = styled.div`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
 `;
 
 const DarkModeToggle = styled.button`
   background-color: transparent;
   border: none;
   cursor: pointer;
-  font-size: 24px;
+  display: flex;
+  align-items: center;
+  font-size: 18px;
   color: ${({ darkMode }) => (darkMode ? 'white' : 'black')};
+`;
+
+const ModeText = styled.span`
+  margin-left: 5px;
 `;
 
 const DarkModeToggleComponent = () => {
@@ -25,10 +39,13 @@ const DarkModeToggleComponent = () => {
 
   return (
     <div>
-      <GlobalStyle darkMode={darkMode} /> 
-      <DarkModeToggle darkMode={darkMode} onClick={toggleDarkMode}>
-        {darkMode ? <FaMoon /> : <FaSun />}
-      </DarkModeToggle>
+      <GlobalStyle darkMode={darkMode} />
+      <DarkModeContainer>
+        <DarkModeToggle darkMode={darkMode} onClick={toggleDarkMode}>
+          {darkMode ? <FaMoon size={24} /> : <FaSun size={24} />} {/* Adjusted icon size */}
+          <ModeText>{darkMode ? 'Light Mode' : 'Dark Mode'}</ModeText>
+        </DarkModeToggle>
+      </DarkModeContainer>
     </div>
   );
 };
