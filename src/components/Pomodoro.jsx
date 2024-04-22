@@ -3,6 +3,8 @@ import styled, { keyframes, ThemeProvider } from 'styled-components';
 import { FaPlay, FaPause, FaRedo, FaForward, FaUpload, FaCog } from 'react-icons/fa';
 import DarkModeToggleComponent from '../components/Darkmode/Darkmode.jsx';
 import { getNotificationSounds } from '../notifications/notificationSounds.jsx';
+import Slider from '@mui/material/Slider';
+import Typography from '@mui/material/Typography';
 
 const darkTheme = {};
 
@@ -132,18 +134,23 @@ const SettingsIcon = styled(FaCog)`
 `;
 
 const Modal = styled.div`
-  display: ${({ open }) => (open ? 'block' : 'none')};
-  position: absolute;
-  bottom: 60px; 
-  right: 20px;
-  background-color: white;
-  border-radius: 5px;
-  padding: 10px;
+  display: ${({ open }) => (open ? 'flex' : 'none')}; 
+  position: fixed; 
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); 
+  background-color: gray;
+  border-radius: 50px;
+  padding: 150px; 
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  flex-direction: column; 
+  justify-content: center; 
+  align-items: center; 
 `;
 
+
 const SoundSelect = styled.select`
-  margin-top: 10px;
+  margin-top: 0px;
 `;
 
 const TimeSelectorContainer = styled.div`
@@ -151,12 +158,10 @@ const TimeSelectorContainer = styled.div`
   overflow-y: auto;
 `;
 
-const TimeOption = styled.div`
-  padding: 10px;
-  cursor: pointer;
-  &:hover {
-    background-color: #f0f0f0;
-  }
+const SelectedTime = styled.div`
+  text-align: center;
+  font-weight: bold;
+  margin-top: 10px;
 `;
 
 const TimeButtonContainer = styled.div`
@@ -165,11 +170,23 @@ const TimeButtonContainer = styled.div`
   margin-top: 10px;
 `;
 
+const TimeIndicatorContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+`;
+const TimeOption = styled.div`
+  padding: 40px; /* Increase padding for more space */
+  cursor: pointer;
+  &:hover {
+    background-color: #f0f0f0;
+  }
+`;
+
 const PomodoroTimer = () => {
   const [time, setTime] = useState(3600);
-  const [breakTime, setBreakTime] = useState(300); // default break time of 5 minutes
-const [focusTime, setFocusTime] = useState(3600); // default focus time of 1 hour
-
+  const [breakTime, setBreakTime] = useState(300); // State for break time
+  const [focusTime, setFocusTime] = useState(3600); // State for focus time
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isFocusTimer, setIsFocusTimer] = useState(true);
@@ -188,7 +205,8 @@ const [focusTime, setFocusTime] = useState(3600); // default focus time of 1 hou
   const [notificationSounds, setNotificationSounds] = useState([]);
   const [selectedNotificationSound, setSelectedNotificationSound] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [timeSelectionOpen, setTimeSelectionOpen] = useState(false);
+  const [timeSelectionOpen, setTimeSelectionOpen] = useState(false); // Time selection state
+  const [selectedTime, setSelectedTime] = useState(null);
 
   useEffect(() => {
     const storedBackgroundImages = JSON.parse(localStorage.getItem('backgroundImages'));
@@ -217,6 +235,7 @@ const [focusTime, setFocusTime] = useState(3600); // default focus time of 1 hou
       audio.play();
     }
   };
+
   useEffect(() => {
     let interval;
     if (isRunning) {
@@ -226,12 +245,12 @@ const [focusTime, setFocusTime] = useState(3600); // default focus time of 1 hou
             clearInterval(interval);
             setIsRunning(false);
             if (isFocusTimer) {
-              setIsFocusTimer(false); 
-              setTime(breakTime); 
+              setIsFocusTimer(false);
+              setTime(breakTime); // Set time to break time when focus mode ends
               document.title = 'Break Timer';
             } else {
-              setIsFocusTimer(true); 
-              setTime(focusTime); 
+              setIsFocusTimer(true);
+              setTime(focusTime); // Set time to focus time when break mode ends
               document.title = 'Focus Timer';
             }
             playNotificationSound();
@@ -275,9 +294,9 @@ const [focusTime, setFocusTime] = useState(3600); // default focus time of 1 hou
     setIsRunning(false);
 
     if (isFocusTimer) {
-      setTime(300);
+      setTime(breakTime); // Set time to break time when skipping focus mode
     } else {
-      setTime(3600);
+      setTime(focusTime); // Set time to focus time when skipping break mode
     }
     setIsFocusTimer(prevIsFocusTimer => !prevIsFocusTimer);
   };
@@ -317,23 +336,27 @@ const [focusTime, setFocusTime] = useState(3600); // default focus time of 1 hou
   };
 
   const isDarkMode = false;
-
   const selectTime = (selectedTime) => {
+    setSelectedTime(selectedTime);
     setTime(selectedTime);
-    setIsRunning(false);
-    setTimeSelectionOpen(false);
   };
-
+  
   const selectTimerType = (isFocus) => {
     setIsFocusTimer(isFocus);
     setTimeSelectionOpen(true);
   };
-
-const setTimeFromSelection = () => {
-  setTimeSelectionOpen(false);
-  setSettingsOpen(false); 
-};
-
+  
+  const setTimeFromSelection = () => {
+    setSettingsOpen(false);
+    setTimeSelectionOpen(false);
+  
+    if (isFocusTimer) {
+      setFocusTime(selectedTime); // Set focus time when confirmed from selection
+    } else {
+      setBreakTime(selectedTime); // Set break time when confirmed from selection
+    }
+  };
+  
   return (
     <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
       <PomodoroContainer>
@@ -359,7 +382,10 @@ const setTimeFromSelection = () => {
               </FileInputContainer>
             )}
           </BottomSquare>
-          <SettingsIcon onClick={() => setSettingsOpen(!settingsOpen)} />
+          <SettingsIcon onClick={() => {
+            setSettingsOpen(true);
+            setTimeSelectionOpen(true);
+          }} />
           <Modal open={settingsOpen}>
             <h3>Notification Sound:</h3>
             <SoundSelect onChange={(e) => setSelectedNotificationSound(e.target.value)}>
@@ -372,20 +398,37 @@ const setTimeFromSelection = () => {
             </SoundSelect>
             <h3>Time Selection:</h3>
             {timeSelectionOpen && (
-              <TimeSelectorContainer>
-                <TimeOption onClick={() => selectTime(2)}>2 secs</TimeOption>
-                <TimeOption onClick={() => selectTime(300)}>5 mins</TimeOption>
-                <TimeOption onClick={() => selectTime(600)}>10 mins</TimeOption>
-                <TimeOption onClick={() => selectTime(900)}>15 mins</TimeOption>
-                <TimeOption onClick={() => selectTime(1200)}>20 mins</TimeOption>
-                <TimeOption onClick={() => selectTime(1500)}>25 mins</TimeOption>
-                <TimeOption onClick={() => selectTime(1800)}>30 mins</TimeOption>
-                <TimeOption onClick={() => selectTime(2400)}>40 mins</TimeOption>
-                <TimeOption onClick={() => selectTime(3000)}>50 mins</TimeOption>
-                <TimeOption onClick={() => selectTime(3600)}>1 hr</TimeOption>
-                <TimeOption onClick={() => selectTime(5100)}>1 hr 25 mins</TimeOption>
-                <TimeOption onClick={() => selectTime(7200)}>2 hrs</TimeOption>
-              </TimeSelectorContainer>
+             <>
+             <Slider
+               value={isFocusTimer ? focusTime : breakTime}
+               onChange={(event, value) => selectTime(value)}
+               step={300}
+               marks={[
+                 { value: 1500, label: '25 mins' },
+                 { value: 3600, label: '60 mins' },
+                 { value: 7200, label: '120 mins' },
+               ]}
+               max={7200}
+               min={300}
+               aria-labelledby="focus-time-slider"
+               style={{ width: '190%', marginLeft: '10%' }} 
+             />
+             <Slider
+               value={isFocusTimer ? breakTime : focusTime}
+               onChange={(event, value) => selectTime(value)}
+               step={300}
+               marks={[
+                 { value: 300, label: '5 mins' },
+                 { value: 600, label: '10 mins' },
+                 { value: 900, label: '15 mins' },
+               ]}
+               max={1800}
+               min={300}
+               aria-labelledby="break-time-slider"
+               style={{ width: '190%', marginLeft: '10%' }} 
+             />
+           </>
+           
             )}
             <TimeButtonContainer>
               <button onClick={() => selectTimerType(true)}>Focus</button>
